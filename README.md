@@ -1,7 +1,7 @@
 # Reinforcement Learning: Puyo Puyo
 Class project for CS394R: Reinforcement Learning
 
-Xujang Jin and Christopher Hahn
+Xuyang Jin and Christopher Hahn
 
 
 ## Installation
