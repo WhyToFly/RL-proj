@@ -47,25 +47,27 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
         if consider_future:
             input_channels = 7
 
-        self.model = ConvNet(layers=[4, 8], input_channels=input_channels, action_nums=action_nums, kernel_size=3)
+        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+        self.model = ConvNet(layers=[4, 8], input_channels=input_channels, action_nums=action_nums, kernel_size=3).to(self.device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=alpha, betas=(0.9, 0.999))
 
     def eval_actions(self,s):
         self.model.eval()
-        s = torch.Tensor(s).unsqueeze(0)
-        return self.model(s)[0]
+        s = torch.Tensor(s).to(self.device).unsqueeze(0)
+        return self.model(s)[0].cpu()
 
     def __call__(self,s,a):
         self.model.eval()
-        s = torch.Tensor(s).unsqueeze(0)
+        s = torch.Tensor(s).to(self.device).unsqueeze(0)
         # print(s)
         return self.model(s)[0][a].item()
 
     def update(self,G,s_tau,a_tau):
         self.model.train()
         self.optimizer.zero_grad()
-        s_tau = torch.Tensor(s_tau).unsqueeze(0)
+        s_tau = torch.Tensor(s_tau).to(self.device).unsqueeze(0)
         pred = self.model(s_tau)
         loss = 1/2 * (pred[0][a_tau] - G) * (pred[0][a_tau] - G)
         loss.backward()
