@@ -53,6 +53,11 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
 
         TODO: add scheduler?
 
+    def eval_actions(self,s):
+        self.model.eval()
+        s = torch.Tensor(s).unsqueeze(0)
+        return self.model(s)[0]
+
     def __call__(self,s,a):
         self.model.eval()
         s = torch.Tensor(s).unsqueeze(0)
