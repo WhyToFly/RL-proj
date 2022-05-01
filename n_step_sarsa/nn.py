@@ -55,19 +55,16 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
 
     def eval_actions(self,s):
         self.model.eval()
-        s = torch.Tensor(s).to(self.device).unsqueeze(0)
         return self.model(s)[0].cpu()
 
     def __call__(self,s,a):
         self.model.eval()
-        s = torch.Tensor(s).to(self.device).unsqueeze(0)
         # print(s)
         return self.model(s)[0][a].item()
 
     def update(self,G,s_tau,a_tau):
         self.model.train()
         self.optimizer.zero_grad()
-        s_tau = torch.Tensor(s_tau).to(self.device).unsqueeze(0)
         pred = self.model(s_tau)
         loss = 1/2 * (pred[0][a_tau] - G) * (pred[0][a_tau] - G)
         loss.backward()
