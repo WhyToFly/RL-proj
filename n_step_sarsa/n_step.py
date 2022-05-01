@@ -38,6 +38,7 @@ def semi_gradient_n_step_td(
     n:int,
     V:ValueFunctionWithApproximation,
     num_episode:int,
+    max_steps:int,
     plot:str,
 ):
     """
@@ -61,7 +62,7 @@ def semi_gradient_n_step_td(
         traj = []
         G_ = 0.0
         t = 0
-        while True:
+        for step in range(max_steps):
             a = pi.action(state)
             old_state = state
             state, r, done, info = env.step(a)
@@ -96,9 +97,3 @@ def semi_gradient_n_step_td(
     plt.savefig(plot)
     plt.close()
     return V
-
-
-
-
-
-

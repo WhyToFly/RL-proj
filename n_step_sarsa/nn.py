@@ -1,53 +1,76 @@
+import sys
+sys.path.append("..")
+
 import numpy as np
 from n_step import ValueFunctionWithApproximation
+from state_encoder import encode_state
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 
+
+class ConvNet(torch.nn.Module):
+    class Block(torch.nn.Module):
+        def __init__(self, n_input, n_output, kernel_size=3, stride=1):
+            super().__init__()
+            self.c1 = torch.nn.Conv2d(n_input, n_output, kernel_size=kernel_size, padding=kernel_size // 2,
+                                      stride=stride)
+            self.c2 = torch.nn.Conv2d(n_output, n_output, kernel_size=kernel_size, padding=kernel_size // 2)
+            self.c3 = torch.nn.Conv2d(n_output, n_output, kernel_size=kernel_size, padding=kernel_size // 2)
+            self.skip = torch.nn.Conv2d(n_input, n_output, kernel_size=1, stride=stride)
+
+        def forward(self, x):
+            return F.relu(self.c3(F.relu(self.c2(F.relu(self.c1(x))))) + self.skip(x))
+
+    def __init__(self, layers=[8, 16, 32], action_nums=10, kernel_size=3):
+        super().__init__()
+
+        L = []
+        c = 3
+        for l in layers:
+            L.append(self.Block(c, l, kernel_size))
+            c = l
+        self.network = torch.nn.Sequential(*L)
+        self.classifier = torch.nn.Linear(c, action_nums)
+
+    def forward(self, x):
+        z = self.network(x)
+        return self.classifier(z.mean(dim=[2, 3]))
 
 
 class ValueFunctionWithNN(ValueFunctionWithApproximation):
     def __init__(self,
-                 state_dims, 
                  action_nums,
-                 alpha):
+                 alpha,
+                 consider_future):
         """
         state_dims: the number of dimensions of state space
         action_nums: num of actions
         """
-        # TODO: implement this method
-        self.model = nn.Linear(state_dims, action_nums)
-        # self.model = nn.Sequential(
-        #     nn.Linear(state_dims, 32),
-        #     nn.ReLU(),
-        #     nn.Linear(32, 32),
-        #     nn.ReLU(),
-        #     nn.Linear(32, action_nums))
-        # self.model = nn.Sequential(
-        #     nn.Linear(state_dims, 32),
-        #     nn.ReLU(),
-        #     # nn.Linear(32, 32),
-        #     # nn.ReLU(),
-        #     nn.Linear(32, action_nums))
+        self.model = ConvNet(layers=[4, 8], action_nums=action_nums, kernel_size=3)
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=alpha, betas=(0.9, 0.999))
 
+        # consider future pieces?
+        self.consider_future = consider_future
+
     def __call__(self,s,a):
-        # TODO: implement this method
-        s = np.concatenate((s[0].reshape(-1), s[1].reshape(-1)))
+        s = encode_state(s, self.consider_future)
         self.model.eval()
-        s = torch.Tensor(s)
+        s = torch.Tensor(s).unsqueeze(0)
         # print(s)
-        return float(self.model(s)[a])
+        return self.model(s)[0][a].item()
 
     def update(self,G,s_tau,a_tau):
-        # TODO: implement this method
         self.model.train()
         self.optimizer.zero_grad()
         # s_tau = torch.Tensor(s_tau)
-        s_tau = torch.Tensor(np.concatenate((s_tau[0].reshape(-1), s_tau[1].reshape(-1))))
-        loss = 1/2 * (self.model(s_tau)[a_tau] - G) * (self.model(s_tau)[a_tau] - G)
+        s_tau = encode_state(s_tau, self.consider_future)
+        s_tau = torch.Tensor(s_tau).unsqueeze(0)
+        pred = self.model(s_tau)
+        loss = 1/2 * (pred[0][a_tau] - G) * (pred[0][a_tau] - G)
         loss.backward()
         self.optimizer.step()
         return None
-
