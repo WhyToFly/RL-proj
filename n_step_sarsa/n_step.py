@@ -92,10 +92,6 @@ def semi_gradient_n_step_td(
                 G += gamma ** (i - tau + 1) * V(traj[i+1][0], traj[i+1][1])
                 loss_val = V.update(G, traj[tau][0], traj[tau][1])
 
-                # log
-                logger.add_scalar('loss', loss_val, global_step)
-                global_step += 1
-
             G_ += r * gamma ** t
             t += 1
             if done == True:
@@ -104,7 +100,8 @@ def semi_gradient_n_step_td(
 
         # log G, game length
         logger.add_scalar('G', G_, global_step)
-        logger.add_scalar('game_len', step, global_step)
+        logger.add_scalar('game_len', t, global_step)
+        global_step += 1
 
         T = len(traj)
         for tau in range(max(old_tau+1, 0), len(traj)):

@@ -65,4 +65,4 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
         loss = 1/2 * (pred[0][a_tau] - G) * (pred[0][a_tau] - G)
         loss.backward()
         self.optimizer.step()
-        return loss.item()
+        return None
