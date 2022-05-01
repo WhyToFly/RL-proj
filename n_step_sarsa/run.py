@@ -4,6 +4,11 @@ from gym_puyopuyo import register
 from n_step import semi_gradient_n_step_td
 from policy import EpsGreedyPolicy
 from nn import ValueFunctionWithNN
+
+import torch.utils.tensorboard as tb
+from os import path
+from datetime import datetime
+
 register()
 
 import torch
@@ -20,12 +25,13 @@ def test_nn(n, plot):
     print(env.observation_space, env.action_space.n)
 
     # V = ValueFunctionWithNN(env.observation_space.shape[0], env.action_space.n)
+    logger = tb.SummaryWriter(path.join(".logs", datetime.now().strftime("%Y-%m-%d_%H-%M-%S)")), flush_secs=1)
 
     V = ValueFunctionWithNN(env.action_space.n, alpha=0.001, consider_future=False)
 
     policy = EpsGreedyPolicy(V=V, action_nums=env.action_space.n, eps=0.01)
 
-    semi_gradient_n_step_td(env, 0.95, policy, n, V, 10000, 50, plot)
+    semi_gradient_n_step_td(env, 0.95, policy, n, V, 10000, 50, logger, plot)
 
     # Vs = [V(s) for s in testing_states]
     # print(Vs)

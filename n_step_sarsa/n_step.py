@@ -2,6 +2,7 @@ import numpy as np
 import tqdm
 from policy import EpsGreedyPolicy
 import matplotlib.pyplot as plt
+import torch.utils.tensorboard as tb
 
 class ValueFunctionWithApproximation(object):
     def __call__(self,s,a) -> float:
@@ -39,6 +40,7 @@ def semi_gradient_n_step_td(
     V:ValueFunctionWithApproximation,
     num_episode:int,
     max_steps:int,
+    logger: tb.SummaryWriter,
     plot:str,
 ):
     """
@@ -54,8 +56,10 @@ def semi_gradient_n_step_td(
     output:
         None
     """
-    #TODO: implement this function
     Gs_ = []
+
+    global_step = 0
+
     for i in tqdm.tqdm(range(num_episode)):
         # generate traj
         state = env.reset()
@@ -74,13 +78,20 @@ def semi_gradient_n_step_td(
                 for i in range(tau, tau+n):
                     G += gamma ** (i - tau) * traj[i][2]
                 G += gamma ** (i - tau + 1) * V(traj[i+1][0], traj[i+1][1])
-                V.update(G, traj[tau][0], traj[tau][1])
+                loss_val = V.update(G, traj[tau][0], traj[tau][1])
+
+                # log
+                logger.add_scalar('loss', loss_val, global_step)
+                global_step += 1
 
             G_ += r * gamma ** t
             t += 1
             if done == True:
                 break
         Gs_.append(G_)
+
+        logger.add_scalar('G', G_, global_step)
+
         T = len(traj)
         for tau in range(max(old_tau+1, 0), len(traj)):
             G = 0
