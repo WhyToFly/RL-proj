@@ -31,7 +31,7 @@ def test_nn(n, plot):
 
     policy = EpsGreedyPolicy(V=V, action_nums=env.action_space.n, eps=0.01)
 
-    semi_gradient_n_step_td(env, 0.95, policy, n, V, 10000, 50, logger, plot)
+    semi_gradient_n_step_td(env, 0.95, policy, n, V, 10000, 100, logger, plot)
 
     # Vs = [V(s) for s in testing_states]
     # print(Vs)

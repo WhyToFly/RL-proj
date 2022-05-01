@@ -90,7 +90,9 @@ def semi_gradient_n_step_td(
                 break
         Gs_.append(G_)
 
+        # log G, game length
         logger.add_scalar('G', G_, global_step)
+        logger.add_scalar('game_len', step, global_step)
 
         T = len(traj)
         for tau in range(max(old_tau+1, 0), len(traj)):
