@@ -5,9 +5,11 @@ Xuyang Jin and Christopher Hahn
 
 
 ## Installation
-Clone the Puyo Puyo Gym Environment
+Clone the [Puyo Puyo Gym Environment](https://github.com/frostburn/gym_puyopuyo), install it
 ```
-https://github.com/frostburn/gym_puyopuyo
+git clone https://github.com/frostburn/gym_puyopuyo.git
+cd gym_puyopuyo
+pip install -e .
 ```
 Install the required Python packages
 ```
