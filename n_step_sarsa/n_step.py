@@ -1,8 +1,13 @@
+import sys
+sys.path.append("..")
+
 import numpy as np
 import tqdm
 from policy import EpsGreedyPolicy
 import matplotlib.pyplot as plt
 import torch.utils.tensorboard as tb
+
+from state_encoder import encode_state
 
 class ValueFunctionWithApproximation(object):
     def __call__(self,s,a) -> float:
@@ -40,6 +45,7 @@ def semi_gradient_n_step_td(
     V:ValueFunctionWithApproximation,
     num_episode:int,
     max_steps:int,
+    consider_future: bool,
     logger: tb.SummaryWriter,
     plot:str,
 ):
@@ -63,6 +69,8 @@ def semi_gradient_n_step_td(
     for i in tqdm.tqdm(range(num_episode)):
         # generate traj
         state = env.reset()
+        # encode state
+        state = encode_state(state, consider_future)
         traj = []
         G_ = 0.0
         t = 0
@@ -70,6 +78,10 @@ def semi_gradient_n_step_td(
             a = pi.action(state)
             old_state = state
             state, r, done, info = env.step(a)
+
+            # encode state
+            state = encode_state(state, consider_future)
+
             traj.append((old_state, a, r, state))
             tau = t - n
             old_tau = tau

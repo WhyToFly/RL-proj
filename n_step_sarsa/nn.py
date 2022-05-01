@@ -1,9 +1,5 @@
-import sys
-sys.path.append("..")
-
 import numpy as np
 from n_step import ValueFunctionWithApproximation
-from state_encoder import encode_state
 
 import torch
 import torch.nn as nn
@@ -24,11 +20,11 @@ class ConvNet(torch.nn.Module):
         def forward(self, x):
             return F.relu(self.c3(F.relu(self.c2(F.relu(self.c1(x))))) + self.skip(x))
 
-    def __init__(self, layers=[8, 16, 32], action_nums=10, kernel_size=3):
+    def __init__(self, layers=[8, 16, 32], input_channels=3, action_nums=10, kernel_size=3):
         super().__init__()
 
         L = []
-        c = 3
+        c = input_channels
         for l in layers:
             L.append(self.Block(c, l, kernel_size))
             c = l
@@ -43,21 +39,19 @@ class ConvNet(torch.nn.Module):
 class ValueFunctionWithNN(ValueFunctionWithApproximation):
     def __init__(self,
                  action_nums,
-                 alpha,
-                 consider_future):
-        """
-        state_dims: the number of dimensions of state space
-        action_nums: num of actions
-        """
-        self.model = ConvNet(layers=[4, 8], action_nums=action_nums, kernel_size=3)
+                 consider_future,
+                 alpha):
+
+        # number of input channels is 3 if not considering future puyos; 7 otherwise
+        input_channels = 3
+        if consider_future:
+            input_channels = 7
+
+        self.model = ConvNet(layers=[4, 8], input_channels=input_channels, action_nums=action_nums, kernel_size=3)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=alpha, betas=(0.9, 0.999))
 
-        # consider future pieces?
-        self.consider_future = consider_future
-
     def __call__(self,s,a):
-        s = encode_state(s, self.consider_future)
         self.model.eval()
         s = torch.Tensor(s).unsqueeze(0)
         # print(s)
@@ -66,8 +60,6 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
     def update(self,G,s_tau,a_tau):
         self.model.train()
         self.optimizer.zero_grad()
-        # s_tau = torch.Tensor(s_tau)
-        s_tau = encode_state(s_tau, self.consider_future)
         s_tau = torch.Tensor(s_tau).unsqueeze(0)
         pred = self.model(s_tau)
         loss = 1/2 * (pred[0][a_tau] - G) * (pred[0][a_tau] - G)

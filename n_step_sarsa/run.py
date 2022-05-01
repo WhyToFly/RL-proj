@@ -9,12 +9,18 @@ import torch.utils.tensorboard as tb
 from os import path
 from datetime import datetime
 
+import argparse
+
 register()
 
 import torch
 
-def test_nn(n, plot):
+def test_nn(n, consider_future):
     env = gym.make("PuyoPuyoEndlessSmall-v2")
+
+    run_name = "n-" + str(n) + "_consider_future-" + str(consider_future)
+
+    plot = run_name + ".png"
 
     """
     from https://github.com/frostburn/gym_puyopuyo:
@@ -24,22 +30,36 @@ def test_nn(n, plot):
     """
     print(env.observation_space, env.action_space.n)
 
-    # V = ValueFunctionWithNN(env.observation_space.shape[0], env.action_space.n)
-    logger = tb.SummaryWriter(path.join(".logs", datetime.now().strftime("%Y-%m-%d_%H-%M-%S)")), flush_secs=1)
+    logger = tb.SummaryWriter(path.join(".logs", datetime.now().strftime("%Y-%m-%d_%H-%M-%S)") + "_" + run_name), flush_secs=1)
 
-    V = ValueFunctionWithNN(env.action_space.n, alpha=0.001, consider_future=False)
+    V = ValueFunctionWithNN(env.action_space.n, consider_future, alpha=5e-3)
 
     policy = EpsGreedyPolicy(V=V, action_nums=env.action_space.n, eps=0.01)
 
-    semi_gradient_n_step_td(env, 0.95, policy, n, V, 10000, 100, logger, plot)
+    print("n",n)
+    print("consider_future",consider_future)
+
+    semi_gradient_n_step_td(env, 0.95, policy, n, V, 100000, 100, consider_future, logger, plot)
 
     # Vs = [V(s) for s in testing_states]
     # print(Vs)
     # assert np.allclose(Vs,correct_values,0.20,5.), f'{correct_values} != {Vs}, but it might due to stochasticity'
 
 if __name__ == "__main__":
-    test_nn(1, "n=1.png")
-    # test_nn(2, "n=2.png")
-    # test_nn(4, "n=4.png")
-    # test_nn(6, "n=6.png")
-    # test_nn(8, "n=8.png")
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-n', '--n', type=int, required=True)
+    parser.add_argument('-c', '--consider_future', required=True)
+
+    args = parser.parse_args()
+
+    consider_future = False
+
+    if args.consider_future == "True":
+        consider_future = True
+    elif args.consider_future == "False":
+        consider_future = False
+    else:
+        raise Exception("Set --consider_future to either True or False")
+
+    test_nn(args.n, consider_future)
