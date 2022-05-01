@@ -37,7 +37,7 @@ def test_nn(n, consider_future, small=True):
 
     V = ValueFunctionWithNN(env.action_space.n, consider_future, alpha=1e-3)
 
-    policy = EpsGreedyPolicy(V=V, action_nums=env.action_space.n, eps=0.01)
+    policy = EpsGreedyPolicy(V=V, action_nums=env.action_space.n, eps=0.05)
 
     semi_gradient_n_step_td(env, 0.95, policy, n, V, 100000, 100, consider_future, logger, plot)
 

@@ -14,11 +14,12 @@ class ConvNet(torch.nn.Module):
             self.c1 = torch.nn.Conv2d(n_input, n_output, kernel_size=kernel_size, padding=kernel_size // 2,
                                       stride=stride)
             self.c2 = torch.nn.Conv2d(n_output, n_output, kernel_size=kernel_size, padding=kernel_size // 2)
-            self.c3 = torch.nn.Conv2d(n_output, n_output, kernel_size=kernel_size, padding=kernel_size // 2)
+            #self.c3 = torch.nn.Conv2d(n_output, n_output, kernel_size=kernel_size, padding=kernel_size // 2)
             self.skip = torch.nn.Conv2d(n_input, n_output, kernel_size=1, stride=stride)
 
         def forward(self, x):
-            return F.relu(self.c3(F.relu(self.c2(F.relu(self.c1(x))))) + self.skip(x))
+            #return F.relu(self.c3(F.relu(self.c2(F.relu(self.c1(x))))) + self.skip(x))
+            return F.relu(self.c2(F.relu(self.c1(x))) + self.skip(x))
 
     def __init__(self, layers=[8, 16, 32], input_channels=3, action_nums=10, kernel_size=3):
         super().__init__()
@@ -49,7 +50,7 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
 
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-        self.model = ConvNet(layers=[4, 8], input_channels=input_channels, action_nums=action_nums, kernel_size=3).to(self.device)
+        self.model = ConvNet(layers=[10], input_channels=input_channels, action_nums=action_nums, kernel_size=3).to(self.device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=alpha, betas=(0.9, 0.999))
 

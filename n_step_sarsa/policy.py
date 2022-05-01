@@ -6,7 +6,10 @@ class EpsGreedyPolicy(object):
         self.eps = eps
     def action(self,state):
         if np.random.rand() < self.eps:
-            return np.random.randint(self.action_nums)
+            action = np.random.randint(self.action_nums)
         else:
             Q = self.V.eval_actions(state).detach()
-            return np.argmax(Q)
+
+            action = np.argmax(Q)
+
+        return action
