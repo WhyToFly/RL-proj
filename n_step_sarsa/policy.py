@@ -8,5 +8,5 @@ class EpsGreedyPolicy(object):
         if np.random.rand() < self.eps:
             return np.random.randint(self.action_nums)
         else:
-            Q = self.V.eval_actions(state)
+            Q = self.V.eval_actions(state).detach()
             return np.argmax(Q)

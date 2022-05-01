@@ -51,8 +51,6 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=alpha, betas=(0.9, 0.999))
 
-        TODO: add scheduler?
-
     def eval_actions(self,s):
         self.model.eval()
         s = torch.Tensor(s).unsqueeze(0)
