@@ -48,9 +48,9 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
         if consider_future:
             input_channels = 7
 
-        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-        self.model = ConvNet(layers=[10], input_channels=input_channels, action_nums=action_nums, kernel_size=3).to(self.device)
+        self.model = ConvNet(layers=[10], input_channels=input_channels, action_nums=action_nums, kernel_size=3).to(device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=alpha, betas=(0.9, 0.999))
 
