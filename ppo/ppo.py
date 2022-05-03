@@ -1,4 +1,6 @@
 import argparse
+from os import path
+from datetime import datetime
 
 import numpy as np
 import torch
@@ -98,42 +100,51 @@ class ProcessStateMLP(gym.ObservationWrapper):
         '''
         return np.concatenate(obs[0].flatten(), obs[1].flatten())
 
-def test_nn(consider_future=False, small=True):
+def test_nn(consider_future=False, small=True, cnn=True):
+    if cnn:
+        run_name = "ppo_cnn_consider_future_" + str(consider_future)
+    else:
+        run_name = "ppo_mlp"
+
+
     if small:
         env = gym.make("PuyoPuyoEndlessSmall-v2")
-        run_name = "ppo_consider_future-" + str(consider_future) + "_small"
+        run_name += "_small"
     else:
         env = gym.make("PuyoPuyoEndlessWide-v2")
-        run_name = "ppo_consider_future-" + str(consider_future) + "_wide"
-
-    plot = run_name + ".png"
+        run_name += "_wide"
 
     if consider_future:
         in_channels = 7
     else:
         in_channels = 3
 
-    # wrap environment to get observations usable in nn
-    # TODO: try linear processing (concatenate observation using ProcessStateMLP), network
-    env = ProcessStateCNN(env, consider_future)
+    logger_kwargs = dict(output_dir=path.join(".logs", datetime.now().strftime("%Y-%m-%d_%H-%M-%S)") + "_" + run_name), exp_name=run_name)
 
-    env_fn = lambda : env
-    ac_kwargs = dict(layers=[8,16,16])
+    if cnn:
+        # wrap environment to get observations usable in nn
+        # TODO: try linear processing (concatenate observation using ProcessStateMLP), network
+        env = ProcessStateCNN(env, consider_future)
 
-    logger_kwargs = dict(output_dir='spinup', exp_name=run_name)
+        env_fn = lambda : env
 
-    ppo(env_fn=env_fn,actor_critic=nn.CNNActorCritic, ac_kwargs=ac_kwargs, steps_per_epoch=4000, epochs=50, gamma=0.95, logger_kwargs=logger_kwargs)
+        ac_kwargs = dict(layers=[8,16,16])
+        ppo(env_fn=env_fn,actor_critic=nn.CNNActorCritic, ac_kwargs=ac_kwargs, steps_per_epoch=4000, epochs=50, gamma=0.95, logger_kwargs=logger_kwargs)
+    else:
+        raise NotImplementedError
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-c', '--consider_future', required=True, choices=['True', 'False'])
+    parser.add_argument('-c', '--consider_future', default='False', choices=['True', 'False'])
+    parser.add_argument('-n', '--network', default='cnn', choices=['cnn', 'mlp'])
     parser.add_argument('-s', '--size', default='small', choices=['small', 'wide'])
 
     args = parser.parse_args()
 
     consider_future = args.consider_future == "True"
     small = args.size == "small"
+    cnn = args.network == "cnn"
 
-    test_nn(consider_future, small)
+    test_nn(consider_future, small, cnn)
