@@ -131,7 +131,7 @@ def test_nn(consider_future, small, cnn, gamma):
         env_fn = lambda : env
 
         ac_kwargs = dict(layers=[8,16,16])
-        ppo(env_fn=env_fn,actor_critic=nn.CNNActorCritic, ac_kwargs=ac_kwargs, steps_per_epoch=4000, epochs=200, gamma=gamma, logger_kwargs=logger_kwargs)
+        ppo(env_fn=env_fn,actor_critic=nn.CNNActorCritic, ac_kwargs=ac_kwargs, steps_per_epoch=4000, epochs=200, max_ep_len=250, gamma=gamma, logger_kwargs=logger_kwargs)
     else:
         raise NotImplementedError
 
