@@ -100,7 +100,7 @@ class ProcessStateMLP(gym.ObservationWrapper):
         '''
         return np.concatenate(obs[0].flatten(), obs[1].flatten())
 
-def test_nn(consider_future=False, small=True, cnn=True):
+def test_nn(consider_future, small, cnn, gamma):
     if cnn:
         run_name = "ppo_cnn_consider_future_" + str(consider_future)
     else:
@@ -113,6 +113,8 @@ def test_nn(consider_future=False, small=True, cnn=True):
     else:
         env = gym.make("PuyoPuyoEndlessWide-v2")
         run_name += "_wide"
+
+    run_name += "_gamma-" + str(gamma)
 
     if consider_future:
         in_channels = 7
@@ -129,7 +131,7 @@ def test_nn(consider_future=False, small=True, cnn=True):
         env_fn = lambda : env
 
         ac_kwargs = dict(layers=[8,16,16])
-        ppo(env_fn=env_fn,actor_critic=nn.CNNActorCritic, ac_kwargs=ac_kwargs, steps_per_epoch=4000, epochs=50, gamma=0.95, logger_kwargs=logger_kwargs)
+        ppo(env_fn=env_fn,actor_critic=nn.CNNActorCritic, ac_kwargs=ac_kwargs, steps_per_epoch=4000, epochs=200, gamma=gamma, logger_kwargs=logger_kwargs)
     else:
         raise NotImplementedError
 
@@ -140,6 +142,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--consider_future', default='False', choices=['True', 'False'])
     parser.add_argument('-n', '--network', default='cnn', choices=['cnn', 'mlp'])
     parser.add_argument('-s', '--size', default='small', choices=['small', 'wide'])
+    parser.add_argument('-g', '--gamma', type=float, default=0.99)
 
     args = parser.parse_args()
 
@@ -147,4 +150,4 @@ if __name__ == "__main__":
     small = args.size == "small"
     cnn = args.network == "cnn"
 
-    test_nn(consider_future, small, cnn)
+    test_nn(consider_future, small, cnn, args.gamma)
