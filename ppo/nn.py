@@ -21,7 +21,7 @@ class ConvNet(nn.Module):
             #return F.relu(self.c3(F.relu(self.c2(F.relu(self.c1(x))))) + self.skip(x))
             return F.relu(self.c2(F.relu(self.c1(x))) + self.skip(x))
 
-    def __init__(self, layers, input_channels, action_nums, kernel_size=3):
+    def __init__(self, layers, input_channels, action_nums, output_nums, kernel_size=3):
         super().__init__()
 
         L = []
@@ -29,18 +29,32 @@ class ConvNet(nn.Module):
         for l in layers:
             L.append(self.Block(c, l, kernel_size))
             c = l
+
+        # apply upconvolution to widen width to at least number of actions
+        # ConvTranspose output: Wout​=(Win​−1)×stride[1]−2×padding[1]+dilation[1]×(kernel_size[1]−1)+output_padding[1]+1
+        # goal: 4 * width - 2
+        L.append(nn.ConvTranspose2d(c, 1, kernel_size=[1,4], stride=[1,4], padding=[0,1]))
+
         self.network = torch.nn.Sequential(*L)
-        self.classifier = torch.nn.Linear(c, action_nums)
+
+        #self.classifier = torch.nn.Linear(c, action_nums)
+        self.classifier = torch.nn.Linear(action_nums, output_nums)
 
     def forward(self, x):
-        z = self.network(x)
-        return self.classifier(z.mean(dim=[2, 3]))
+        #z = self.network(x)
+        z = F.relu(self.network(x))
+
+
+        #z = self.classifier(z.mean(dim=[2, 3]))
+        z = self.classifier(z.mean(dim=[1, 2]))
+
+        return z
 
 # CNN Critic; adapted from MLPCritic (spinup.algos.pytorch.ppo.core)
 class CNNCritic(nn.Module):
-    def __init__(self, layers, input_channels):
+    def __init__(self, layers, input_channels, action_nums):
         super().__init__()
-        self.v_net = ConvNet(layers, input_channels, 1)
+        self.v_net = ConvNet(layers, input_channels, action_nums, 1)
 
     def forward(self, obs):
         return torch.squeeze(self.v_net(obs), -1) # Critical to ensure v has right shape.
@@ -49,7 +63,7 @@ class CNNCritic(nn.Module):
 class CNNCategoricalActor(Actor):
     def __init__(self, layers, input_channels, action_nums):
         super().__init__()
-        self.logits_net = ConvNet(layers, input_channels, action_nums)
+        self.logits_net = ConvNet(layers, input_channels, action_nums, action_nums)
 
     def _distribution(self, obs):
         logits = self.logits_net(obs)
@@ -69,7 +83,7 @@ class CNNActorCritic(nn.Module):
         self.pi = CNNCategoricalActor(layers, input_channels, action_space.n)
 
         # build value function
-        self.v  = CNNCritic(layers, input_channels)
+        self.v  = CNNCritic(layers, input_channels, action_space.n)
 
     def step(self, obs):
         with torch.no_grad():

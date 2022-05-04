@@ -6,12 +6,11 @@ import numpy as np
 import torch
 
 from spinup import ppo_pytorch as ppo
+from spinup.utils.run_utils import ExperimentGrid
 import gym
 from gym_puyopuyo import register
 
-import nn
-
-register()
+from nn import CNNActorCritic
 
 # wrapper to process state, make it ready for CNN
 class ProcessStateCNN(gym.ObservationWrapper):
@@ -20,6 +19,8 @@ class ProcessStateCNN(gym.ObservationWrapper):
         self.env = env
 
         orig_shape = env.observation_space.spaces[1].shape
+
+        self.consider_future = consider_future
 
         if consider_future:
             self.observation_space = gym.spaces.Box(low=0, high=1, shape=(7, orig_shape[1], orig_shape[2]), dtype=int)
@@ -61,7 +62,7 @@ class ProcessStateCNN(gym.ObservationWrapper):
 
         channels_list = []
 
-        if consider_future:
+        if self.consider_future:
             for i in range(argmax_color.shape[0]):
                 for j in range(argmax_color[0].shape[0]):
                     channels_list.append(np.expand_dims((argmax_arr == argmax_color[i][j]).astype(int), axis=-1))
@@ -101,6 +102,8 @@ class ProcessStateMLP(gym.ObservationWrapper):
         return np.concatenate(obs[0].flatten(), obs[1].flatten())
 
 def test_nn(consider_future, small, cnn, gamma):
+    register()
+
     if cnn:
         run_name = "ppo_cnn_consider_future_" + str(consider_future)
     else:
@@ -116,11 +119,6 @@ def test_nn(consider_future, small, cnn, gamma):
 
     run_name += "_gamma-" + str(gamma)
 
-    if consider_future:
-        in_channels = 7
-    else:
-        in_channels = 3
-
     logger_kwargs = dict(output_dir=path.join(".logs", datetime.now().strftime("%Y-%m-%d_%H-%M-%S)") + "_" + run_name), exp_name=run_name)
 
     if cnn:
@@ -131,12 +129,43 @@ def test_nn(consider_future, small, cnn, gamma):
         env_fn = lambda : env
 
         ac_kwargs = dict(layers=[8,16,16])
-        ppo(env_fn=env_fn,actor_critic=nn.CNNActorCritic, ac_kwargs=ac_kwargs, steps_per_epoch=4000, epochs=200, max_ep_len=250, gamma=gamma, logger_kwargs=logger_kwargs)
+        ppo(env_fn=env_fn,actor_critic=CNNActorCritic, ac_kwargs=ac_kwargs, steps_per_epoch=4000, epochs=200, max_ep_len=250, gamma=gamma, logger_kwargs=logger_kwargs)
     else:
         raise NotImplementedError
 
+def create_env():
+    from gym_puyopuyo import register
+
+    register()
+
+    env = gym.make("PuyoPuyoEndlessWide-v2")
+    env = ProcessStateCNN(env, False)
+    return env
+
+def create_env_future():
+    from gym_puyopuyo import register
+
+    register()
+
+    env = gym.make("PuyoPuyoEndlessWide-v2")
+    env = ProcessStateCNN(env, True)
+    return env
 
 if __name__ == "__main__":
+    # replaced cmd arguments with gridsearch for wide env after proving that small env can be solved by ppo
+
+    eg = ExperimentGrid(name='ppo-pyt-bench')
+    eg.add('env_fn', [create_env, create_env_future], 'env_fn')
+    eg.add('actor_critic', CNNActorCritic)
+    eg.add('gamma', [0.9,0.95,0.98,0.99,0.999], 'gamma')
+    eg.add('epochs', 50)
+    eg.add('steps_per_epoch', 4000)
+    eg.add('max_ep_len', 100)
+    eg.add('ac_kwargs:layers', [[4], [8], [8,16], [8,16,16], [32,64,64]], 'layers')
+    eg.run(ppo, num_cpu=6)
+
+
+    '''
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-c', '--consider_future', default='False', choices=['True', 'False'])
@@ -151,3 +180,4 @@ if __name__ == "__main__":
     cnn = args.network == "cnn"
 
     test_nn(consider_future, small, cnn, args.gamma)
+    '''
