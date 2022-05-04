@@ -152,13 +152,22 @@ def create_env_future():
     return env
 
 if __name__ == "__main__":
-    # replaced cmd arguments with gridsearch for wide env after proving that small env can be solved by ppo
+    '''
+    replaced cmd arguments with gridsearch for wide env after proving that small env can be solved by ppo
+    only works when adding
+
+    import sys
+    sys.path.append("../ppo/")
+
+    to spinningup/spinup/utils/run_entrypoint.py
+    Comment this/uncomment below for command line argument/single experiment version
+    '''
 
     eg = ExperimentGrid(name='ppo-pyt-bench')
     eg.add('env_fn', [create_env, create_env_future], 'env_fn')
     eg.add('actor_critic', CNNActorCritic)
     eg.add('gamma', [0.9,0.95,0.98,0.99,0.999], 'gamma')
-    eg.add('epochs', 50)
+    eg.add('epochs', 250)
     eg.add('steps_per_epoch', 4000)
     eg.add('max_ep_len', 100)
     eg.add('ac_kwargs:layers', [[4], [8], [8,16], [8,16,16], [32,64,64]], 'layers')
