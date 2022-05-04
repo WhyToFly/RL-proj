@@ -48,3 +48,8 @@ Install [PyTorch](https://pytorch.org/)
 ```
 conda install pytorch torchvision torchaudio -c pytorch
 ```
+
+Install [Tensorboard](https://www.tensorflow.org/tensorboard)
+```
+pip install tensorboard
+```
