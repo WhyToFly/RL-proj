@@ -133,7 +133,7 @@ def test_nn(consider_future, small, cnn, gamma):
     else:
         raise NotImplementedError
 
-def create_env():
+def create_env_wide():
     from gym_puyopuyo import register
 
     register()
@@ -142,12 +142,30 @@ def create_env():
     env = ProcessStateCNN(env, False)
     return env
 
-def create_env_future():
+def create_env_wide_future():
     from gym_puyopuyo import register
 
     register()
 
     env = gym.make("PuyoPuyoEndlessWide-v2")
+    env = ProcessStateCNN(env, True)
+    return env
+
+def create_env_small():
+    from gym_puyopuyo import register
+
+    register()
+
+    env = gym.make("PuyoPuyoEndlessSmall-v2")
+    env = ProcessStateCNN(env, False)
+    return env
+
+def create_env_small_future():
+    from gym_puyopuyo import register
+
+    register()
+
+    env = gym.make("PuyoPuyoEndlessSmall-v2")
     env = ProcessStateCNN(env, True)
     return env
 
@@ -164,10 +182,10 @@ if __name__ == "__main__":
     '''
 
     eg = ExperimentGrid(name='ppo-pyt-bench')
-    eg.add('env_fn', [create_env, create_env_future], 'env_fn')
+    eg.add('env_fn', [create_env_small, create_env_small_future], 'env_fn')
     eg.add('actor_critic', CNNActorCritic)
     eg.add('gamma', [0.9,0.95,0.98,0.99,0.999], 'gamma')
-    eg.add('epochs', 250)
+    eg.add('epochs', 150)
     eg.add('steps_per_epoch', 4000)
     eg.add('max_ep_len', 100)
     eg.add('ac_kwargs:layers', [[4], [8], [8,16], [8,16,16], [32,64,64]], 'layers')
