@@ -44,7 +44,6 @@ class ConvNet(nn.Module):
         #z = self.network(x)
         z = F.relu(self.network(x))
 
-
         #z = self.classifier(z.mean(dim=[2, 3]))
         z = self.classifier(z.mean(dim=[1, 2]))
 
