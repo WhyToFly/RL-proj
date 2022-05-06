@@ -1,0 +1,44 @@
+{
+    "ac_kwargs":	{
+        "layers":	[
+            32,
+            64,
+            64
+        ]
+    },
+    "actor_critic":	"CNNActorCritic",
+    "clip_ratio":	0.2,
+    "env_fn":	"create_env_small",
+    "epochs":	75,
+    "exp_name":	"ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64",
+    "gamma":	0.98,
+    "lam":	0.97,
+    "logger":	{
+        "<spinup.utils.logx.EpochLogger object at 0x7f97a470b748>":	{
+            "epoch_dict":	{},
+            "exp_name":	"ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64",
+            "first_row":	true,
+            "log_current_row":	{},
+            "log_headers":	[],
+            "output_dir":	"/Users/christopherh/Documents/Uni/Spring22/RL_Proj/RL-proj/spinningup/data/ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64/ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64_s0",
+            "output_file":	{
+                "<_io.TextIOWrapper name='/Users/christopherh/Documents/Uni/Spring22/RL_Proj/RL-proj/spinningup/data/ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64/ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64_s0/progress.txt' mode='w' encoding='UTF-8'>":	{
+                    "mode":	"w"
+                }
+            }
+        }
+    },
+    "logger_kwargs":	{
+        "exp_name":	"ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64",
+        "output_dir":	"/Users/christopherh/Documents/Uni/Spring22/RL_Proj/RL-proj/spinningup/data/ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64/ppo-pyt-bench_env_fncreate_env_small_gamma0-98_layers32-64-64_s0"
+    },
+    "max_ep_len":	100,
+    "pi_lr":	0.0003,
+    "save_freq":	10,
+    "seed":	0,
+    "steps_per_epoch":	4000,
+    "target_kl":	0.01,
+    "train_pi_iters":	80,
+    "train_v_iters":	80,
+    "vf_lr":	0.001
+}
