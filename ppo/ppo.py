@@ -119,7 +119,7 @@ if __name__ == "__main__":
     '''
 
     eg = ExperimentGrid(name='ppo-pyt-bench')
-    eg.add('env_fn', [create_env_small_mlp, create_env_wide_mlp], 'env_fn')
+    eg.add('env_fn', [create_env_wide_mlp], 'env_fn')
     eg.add('actor_critic', MLPActorCritic)
     eg.add('gamma', [0.9,0.95,0.98,0.99,0.999], 'gamma')
     eg.add('epochs', 150)
