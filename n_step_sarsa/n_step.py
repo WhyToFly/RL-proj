@@ -48,6 +48,7 @@ def semi_gradient_n_step_td(
     consider_future: bool,
     logger: tb.SummaryWriter,
     plot:str,
+    arch:str,
 ):
     """
     implement n-step semi gradient TD for estimating v
@@ -70,7 +71,7 @@ def semi_gradient_n_step_td(
         # generate traj
         state = env.reset()
         # encode state
-        state = encode_state(state, consider_future)
+        state = encode_state(state, consider_future, arch)
         traj = []
         G_ = 0.0
         t = 0
@@ -80,7 +81,7 @@ def semi_gradient_n_step_td(
             state, r, done, info = env.step(a)
 
             # encode state
-            state = encode_state(state, consider_future)
+            state = encode_state(state, consider_future, arch)
 
             traj.append((old_state, a, r, state))
             tau = t - n

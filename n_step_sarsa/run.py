@@ -15,7 +15,7 @@ register()
 
 import torch
 
-def test_nn(n, consider_future, small=True):
+def test_nn(n, consider_future, small=True, arch="conv"):
     if small:
         env = gym.make("PuyoPuyoEndlessSmall-v2")
         run_name = "n-" + str(n) + "_consider_future-" + str(consider_future) + "_small"
@@ -35,11 +35,11 @@ def test_nn(n, consider_future, small=True):
 
     logger = tb.SummaryWriter(path.join(".logs", datetime.now().strftime("%Y-%m-%d_%H-%M-%S)") + "_" + run_name), flush_secs=1)
 
-    V = ValueFunctionWithNN(env.action_space.n, consider_future, alpha=1e-3)
+    V = ValueFunctionWithNN(env.action_space.n, consider_future, alpha=1e-3, arch=arch)
 
     policy = EpsGreedyPolicy(V=V, action_nums=env.action_space.n, eps=0.05)
 
-    semi_gradient_n_step_td(env, 0.95, policy, n, V, 100000, 100, consider_future, logger, plot)
+    semi_gradient_n_step_td(env, 0.999, policy, n, V, 100000, 100, consider_future, logger, plot, arch=arch)
 
     # Vs = [V(s) for s in testing_states]
     # print(Vs)
@@ -51,6 +51,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--n', type=int, required=True)
     parser.add_argument('-c', '--consider_future', required=True, choices=['True', 'False'])
     parser.add_argument('-s', '--size', default='small', choices=['small', 'wide'])
+    parser.add_argument('-a', '--arch', default='conv', choices=['conv', 'mlp'])
 
     args = parser.parse_args()
 
@@ -59,5 +60,5 @@ if __name__ == "__main__":
     small = True
     if args.size == 'wide':
         small = False
-
-    test_nn(args.n, consider_future, small)
+    
+    test_nn(args.n, consider_future, small, args.arch)

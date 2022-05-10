@@ -52,7 +52,8 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
     def __init__(self,
                  action_nums,
                  consider_future,
-                 alpha):
+                 alpha,
+                 arch):
 
         # number of input channels is 3 if not considering future puyos; 7 otherwise
         input_channels = 3
@@ -61,7 +62,17 @@ class ValueFunctionWithNN(ValueFunctionWithApproximation):
 
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-        self.model = ConvNet(layers=[10], input_channels=input_channels, action_nums=action_nums, output_nums=action_nums, kernel_size=3).to(device)
+    
+        if arch == "conv":
+            self.model = ConvNet(layers=[8, 16], input_channels=input_channels, action_nums=action_nums, output_nums=action_nums, kernel_size=3).to(device)
+        else:
+            assert arch == "mlp"
+            self.model = nn.Sequential(
+                                nn.Linear(280, 32),
+                                nn.ReLU(),
+                                nn.Linear(32, 16),
+                                nn.ReLU(),
+                                nn.Linear(16, 30)).to(device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=alpha, betas=(0.9, 0.999))
 
